@@ -1,0 +1,7 @@
+flask
+pandas
+sentence-transformers
+textblob
+vaderSentiment
+language_tool_python
+
