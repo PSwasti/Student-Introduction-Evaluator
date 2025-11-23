@@ -3,6 +3,7 @@ import pandas as pd
 from sentence_transformers import SentenceTransformer
 import language_tool_python
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+import numpy as np
 
 app = Flask(__name__)
 model = SentenceTransformer('paraphrase-MiniLM-L6-v2')
@@ -57,21 +58,41 @@ def evaluate_salutation(text):
             return 2
     return 0
 
+model = SentenceTransformer('paraphrase-MiniLM-L6-v2')
+
+def calculate_similarity(query, passages):
+    query_embedding = model.encode(query)
+    passage_embeddings = model.encode(passages)
+    similarity = np.inner(query_embedding, passage_embeddings)
+    return similarity
+
 def evaluate_keywords(text):
-    essential_keywords = ['name', 'age', 'family', 'hobbies', 'goals']
+    essential_passages = ["name","age","family","hobbies"]
+    similarity_scores = calculate_similarity(text, essential_passages)
     score = 0
-    for keyword in essential_keywords:
-        if keyword in text.lower():
+    for similarity in similarity_scores:
+        if similarity > 0.7:
             score += 4
     if 'school' in text.lower() or 'class' in text.lower():
         score += 4
-    good_keywords = ['interest', 'passion', 'experience', 'skills', 'background']
-    for keyword in good_keywords:
-        if keyword in text.lower():
+    
+    good_passages = ["origin location","goal","intresting thing","strengths"]
+    good_similarity_scores = calculate_similarity(text, good_passages)
+    for similarity in good_similarity_scores:
+        if similarity > 0.8:
             score += 2
-    if any(family_member in text.lower() for family_member in ['mother', 'father', 'sister', 'brother', 'parent']):
-            score += 2
+    family_keywords = ['mother', 'father', 'sister', 'brother', 'parent']
+    if any(family_member in text.lower() for family_member in family_keywords):
+        score += 2
+        print(f"Family Score: {score}")
     return score
+
+transcript = """Hello everyone, myself Muskan, studying in class 8th B section from Christ Public School. 
+I am 13 years old. I live with my family. There are 3 people in my family, me, my mother and my father.
+One special thing about my family is that they are very kind hearted to everyone and soft spoken."""
+keyword_score = evaluate_keywords(transcript)
+print(f"Keyword Score: {keyword_score}")
+
 
 def evaluate_flow(text):
     text_lower = text.lower()
@@ -176,3 +197,5 @@ def compute_overall_score(scores):
 
 if __name__ == '__main__':
     app.run(debug=True)
+
+
