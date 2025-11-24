@@ -3,15 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Transcript Scoring</title>
+    <title>Transcript Scoring Tool</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+        textarea { width: 100%; padding: 10px; }
+        button { background: #4CAF50; color: white; padding: 10px 20px; border: none; cursor: pointer; }
+        button:hover { background: #45a049; }
+        #results { margin-top: 20px; padding: 20px; background: #f4f4f4; border-radius: 5px; }
+        h2 { color: #333; }
+        ul { list-style-type: none; padding: 0; }
+        li { margin-bottom: 10px; }
+    </style>
 </head>
 <body>
     <h1>Transcript Scoring Tool</h1>
-    <form action="/score" method="post">
+    <form id="scoreForm">
         <label for="transcript">Enter Transcript:</label><br>
-        <textarea id="transcript" name="transcript" rows="10" cols="50"></textarea><br><br>
+        <textarea id="transcript" name="transcript" rows="10" cols="50" required></textarea><br><br>
         <button type="submit">Score</button>
     </form>
+   
+    <div id="results" style="display:none;">
+        <h2>Results</h2>
+        <h3>Overall Score: <span id="overallScore"></span></h3>
+        <h4>Criteria Scores:</h4>
+        <div id="criteriaScores"></div>
+
+        <h4>Feedback:</h4>
+        <div id="feedback"></div>
+    </div>
+
+    <script>
+        document.getElementById('scoreForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+           
+            const formData = new FormData(e.target);
+            const response = await fetch('/score', {
+                method: 'POST',
+                body: formData
+            });
+           
+            const data = await response.json();
+           
+            document.getElementById('overallScore').textContent = data.overall_score;
+           
+            let criteriaHTML = '<ul>';
+            for (const [key, value] of Object.entries(data.criteria_scores)) {
+                criteriaHTML += `<li><strong>${key}:</strong> ${value}</li>`;
+            }
+            criteriaHTML += '</ul>';
+           
+            document.getElementById('criteriaScores').innerHTML = criteriaHTML;
+
+            let feedbackHTML = '<ul>';
+            for (const [key, feedback] of Object.entries(data.feedback)) {
+                feedbackHTML += `<li><strong>${key}:</strong> ${feedback}</li>`;
+            }
+            feedbackHTML += '</ul>';
+            
+            document.getElementById('feedback').innerHTML = feedbackHTML;
+            document.getElementById('results').style.display = 'block';
+        });
+    </script>
 </body>
 </html>
+
+
 
